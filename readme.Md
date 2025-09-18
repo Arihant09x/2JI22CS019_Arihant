@@ -1,125 +1,99 @@
-URL Shortener Microservice
-This is a lightweight, in-memory URL shortener microservice built with Node.js and Express. It allows users to create short links for long URLs, track click statistics, and set custom expiry times. All data is stored in-memory and will be reset when the server restarts.
+# URL Shortener Microservice
 
-Pre-requisites
-Node.js (v18.0 or newer recommended for native fetch support)
+A simple URL shortener microservice built with Node.js and Express. It allows creating short URLs for long URLs, redirecting to the original URLs, and retrieving click statistics. Data is stored in-memory and resets on server restart.
 
-npm (usually included with Node.js)
+## Requirements
 
-Installation & Running
-Clone the repository or download the source code.
+- Node.js (version 14 or higher)
+- npm
 
-Navigate to the project directory:
+## Installation and Running
 
-cd backend
+1. Clone the repository or download the source code.
+2. Navigate to the project directory:
+   ```
+   cd backend
+   ```
+3. Install dependencies:
+   ```
+   npm install
+   ```
+4. Start the server:
+   ```
+   npm start
+   ```
+   The server will run on http://localhost:3000 by default.
 
-Install dependencies:
+## API Endpoints
 
-npm install
+### Create Short URL
 
-Start the server:
+- **Method**: POST
+- **Path**: /create
+- **Request Body** (JSON):
+  | Field | Type | Required | Default | Description |
+  |-----------|--------|----------|---------|--------------------------------------|
+  | url | string | Yes | | The original URL to shorten |
+  | validity | number | No | 30 | Validity period in minutes |
+  | shortcode | string | No | random | Custom shortcode (if provided) |
 
-npm start
+- **Example Request**:
 
-The server will start on http://localhost:3000 by default.
+  ```json
+  {
+    "url": "https://example.com",
+    "validity": 60,
+    "shortcode": "abc123"
+  }
+  ```
 
-API Endpoints
+- **Example Response** (200 OK):
+  ```json
+  {
+    "shortlink": "http://localhost:3000/abc123",
+    "expiry": "2023-10-01T12:00:00.000Z"
+  }
+  ```
 
-1. Create a Short URL
-   This endpoint creates a new short link for a given URL. You can optionally provide a custom shortcode and a validity period.
+### Redirect to Original URL
 
-Method: POST
+- **Method**: GET
+- **Path**: /:shortcode
+- **Request Body**: None
 
-Path: /shorturls
+- **Example Request**:
 
-Request Body (JSON)
-Field
+  ```
+  GET http://localhost:3000/abc123
+  ```
 
-Type
+- **Example Response**: Redirects to the original URL (302 status) or error JSON if not found/expired.
 
-Required
+### Get Stats
 
-Default
+- **Method**: GET
+- **Path**: /shorturl/:shortcode
+- **Request Body**: None
 
-Description
+- **Example Request**:
 
-url
+  ```
+  GET http://localhost:3000/shorturl/abc123
+  ```
 
-string
-
-Yes
-
-The original, long URL you want to shorten.
-
-validity
-
-number
-
-No
-
-30
-
-The link's validity period in minutes.
-
-shortcode
-
-string
-
-No
-
-random
-
-A custom 5-character code for your link.
-
-Example Request:
-{
-"url": "[https://expressjs.com/en/starter/hello-world.html](https://expressjs.com/en/starter/hello-world.html)",
-"validity": 60,
-"shortcode": "express-hw"
-}
-
-Example Success Response (201 Created):
-{
-"shortlink": "http://localhost:3000/express-hw",
-"expiry": "2025-09-18T08:00:00.123Z"
-}
-
-2. Redirect to Original URL
-   This endpoint is the core function of the service. Accessing the short link will redirect the user to the original long URL and log the click.
-
-Method: GET
-
-Path: /:shortcode
-
-Example Usage:
-Simply open the generated short link in your web browser.
-
-URL: http://localhost:3000/express-hw
-
-Expected Behavior:
-The browser will be redirected to https://expressjs.com/en/starter/hello-world.html. If the link is expired or does not exist, an appropriate JSON error will be returned.
-
-3. Get URL Statistics
-   This endpoint retrieves the usage statistics for a specific short link, including the total number of clicks and details about each click.
-
-Method: GET
-
-Path: /shorturls/:shortcode
-
-Example Request:
-URL: http://localhost:3000/shorturls/express-hw
-
-Example Success Response (200 OK):
-{
-"totalClicks": 1,
-"originalUrl": "[https://expressjs.com/en/starter/hello-world.html](https://expressjs.com/en/starter/hello-world.html)",
-"creationDate": "2025-09-18T07:00:00.123Z",
-"expiryDate": "2025-09-18T08:00:00.123Z",
-"clickDetails": [
-{
-"timestamp": "2025-09-18T07:05:10.456Z",
-"source": "direct",
-"location": "::1"
-}
-]
-}
+- **Example Response** (200 OK):
+  ```json
+  {
+    "totalclicks": 5,
+    "orinalUrl": "https://example.com",
+    "creationDate": "2023-10-01T11:00:00.000Z",
+    "expiryDate": "2023-10-01T12:00:00.000Z",
+    "clicksDetails": [
+      {
+        "timestamp": "2023-10-01T11:30:00.000Z",
+        "source": "direct",
+        "location": "127.0.0.1"
+      }
+    ]
+  }
+  ```
